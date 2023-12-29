@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  mykeypair:
+      Type: AWS::EC2::KeyPair::KeyName
+  SecurityGroupIP:
+      Type: String
+      Default: 0.0.0.0/0
+      Description: Introduce la IP para hacer whitlist en nuestro SG
+  InstanceTypeParameter:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - m1.small
+      - m1.large
+    Description: Enter t2.micro, m1.small, or m1.large. Default is t2.micro.
+    
+Resources:
+  Ec2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-08e2c1a8d17c2fe17
+      InstanceType: !Ref InstanceTypeParameter
+      KeyName: !Ref mykeypair
+      BlockDeviceMappings:
+        - DeviceName: "/dev/sda1"
+          Ebs:
+            VolumeSize: "20"
+            VolumeType: "gp2"
+            DeleteOnTermination: "true"
+      SecurityGroups:
+        - Ref: "ServerSecurityGroup"
+
+  ServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: allow connections from specified CIDR
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: !Ref SecurityGroupIP
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 192.168.1.1/32
+

@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  mykeypair:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Enter the key pair for the EC2 instance.
+
+  SecurityGroupIP:
+    Type: String
+    Default: 0.0.0.0/0
+    Description: Enter the IP to whitelist in our security group.
+
+  InstanceTypeParameter:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - m1.small
+      - m1.large
+    Description: Enter t2.micro, m1.small, or m1.large. Default is t2.micro.
+
+  VolumeSizeParameter:
+    Type: Number
+    Default: 20
+    AllowedValues:
+      - 8
+      - 10
+      - 12
+      - 14
+      - 16
+      - 18
+      - 20
+    Description: Enter the volume size between 8 and 20 GB.
+
+  FromPortParameter:
+    Type: Number
+    Default: 22
+    MinValue: 0
+    MaxValue: 9999
+    Description: Enter the starting port number for security group rules.
+
+  ToPortParameter:
+    Type: Number
+    Default: 22
+    MinValue: 00
+    MaxValue: 9999
+    Description: Enter the ending port number for security group rules.
+
+Resources:
+  Ec2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !FindInMap [RegionToAMIMap, !Ref "AWS::Region", "22.04"]
+      InstanceType: !Ref InstanceTypeParameter
+      KeyName: !Ref mykeypair
+      BlockDeviceMappings:
+        - DeviceName: "/dev/sda1"
+          Ebs:
+            VolumeSize: !Ref VolumeSizeParameter
+            VolumeType: "gp2"
+            DeleteOnTermination: "true"
+      SecurityGroups:
+        - Ref: "ServerSecurityGroup"
+
+  ServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: allow connections from specified CIDR
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref FromPortParameter
+          ToPort: !Ref ToPortParameter
+          CidrIp: !Ref SecurityGroupIP
+
+Mappings:
+  RegionToAMIMap:
+    us-west-2:
+      "22.04": ami-xyz12345
+    us-east-1:
+      "22.04": ami-abc67890
+    # Add more regions as needed
