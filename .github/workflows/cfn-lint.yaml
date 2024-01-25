@@ -1,0 +1,27 @@
+name: CFN-Lint Validation
+
+on:
+  pull_request:
+    paths:
+      - 'path/to/cloudformation/files/**'  # Especifica la ruta o patrón que coincide con tus archivos de CloudFormation
+
+jobs:
+  cfn-lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install cfn-lint
+      run: |
+        pip install cfn-lint
+
+    - name: Run cfn-lint
+      run: |
+        cfn-lint path/to/cloudformation/files/**
